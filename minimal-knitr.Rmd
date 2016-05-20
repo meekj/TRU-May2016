@@ -1,0 +1,44 @@
+# Minimal R / knitr Example
+## Jon Meek - TRU May 2016 - Trenton R Users
+## Initialize and plot
+
+In the first R chunk, set "echo=TRUE, message=TRUE, warning=TRUE" to show all work.
+
+```{r initialize, echo=TRUE, message=TRUE, warning=TRUE}
+## First R code block, this is a R comment
+
+library(ggplot2)
+
+FigureWidth  <- 16
+FigureHeight <- 8
+
+xv <- 0:99
+yv <- sin(xv / 5)
+
+ggplot() + geom_line(aes(x = xv, y = yv)) + geom_point(aes(x = xv, y = yv))
+
+```
+## The plot in it's own chunk, code and messages supressed
+
+```{r Example1, echo=FALSE, message=FALSE, fig.width = FigureWidth, fig.height = FigureHeight}
+
+ggplot() + geom_line(aes(x = xv, y = yv)) + geom_point(aes(x = xv, y = yv))
+
+```
+
+Generate HTML with a command like:
+
+    Rscript -e "library(knitr); knit2html('minimal-knitr.Rmd')"
+
+this assumes that the user is in the directory containing the code,
+and wants the HTML output in the same directory
+
+Or, in a more production friendly way:
+
+    Rscript -e "setwd('/n2/r-reports/'); library(knitr); knit2html('/usr/local/bin/minimal-knitr.Rmd')"
+
+setwd sets the directory where the intermediate .md and final .html
+files are written. The argument to knit2html is the path to the
+"source code".
+
+RStudio has an interactive GUI way to do the same thing (I believe)
