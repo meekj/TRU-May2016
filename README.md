@@ -8,4 +8,5 @@ wl-st-points.r           - knitr under 'program control' code
 wl-st-points-201604.html - Output from 'program control' code
 
 View minimal example: https://cdn.rawgit.com/meekj/TRU-May2016/master/minimal-knitr.html
+
 View primary example: https://cdn.rawgit.com/meekj/TRU-May2016/master/wl-st-points-201604.html
