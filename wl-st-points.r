@@ -14,7 +14,7 @@
 
 ## Water level and prediction data obtained from https://tidesandcurrents.noaa.gov
 
-RCSid <- '$Id: wl-st-points.r,v 1.3 2016/05/19 21:40:55 meekj Exp $'
+RCSid <- '$Id: wl-st-points.r,v 1.5 2016/05/21 01:48:37 meekj Exp $'
 
 library(ggplot2)
 library(dplyr)
@@ -23,7 +23,7 @@ library(knitr)
 library(docopt)
 library(XML)
 
-Sys.setenv(TZ="UTC")
+Sys.setenv(TZ="UTC") # Water level data are UTC (but not tidal predictions, see below)
 
 ## Setup docopt command line options and help
 ##
@@ -179,25 +179,28 @@ for (station in StationOrder) { # Plot data for each station
     plot_header <- paste('```{r plot', plot_number,                                           # Plot header, will print warnings, but not code
                          ', echo=FALSE, message=FALSE, fig.width = FigureWidth, fig.height = FigureHeight}', sep = '')
 
-    knitr_data <- c(knitr_data,   # Append to existing data, report header on first plot, NULL after that 
-                    plot_header,  # R code section begin line, composed above
-                    "ggplot() +", # Daily measurements boxplot with no whiskers, time ordered measurements and high/low predictions
-                    "geom_boxplot(data = plotdata, aes(group = DateT, x = DateT, y = Water.Level), coef = 0, outlier.size = 0, outlier.colour = 'NA', size = 0.3, colour = 'darkgray') +",
-                    "geom_point(data = prediction_high, aes(x = Time, y = predictions_in_ft), colour  = 'red', size = PointSize, shape=19) +",
-                    "geom_point(data = prediction_low,  aes(x = Time, y = predictions_in_ft), colour  = 'red', size = PointSize, shape=19) +",
-                    "geom_line(data  = prediction_high, aes(x = Time, y = predictions_in_ft), colour  = 'red', size = LineSize) +",
-                    "geom_line(data  = prediction_low,  aes(x = Time, y = predictions_in_ft), colour  = 'red', size = LineSize) +",
-                    "geom_line(data  = plotdata, aes(x = Date.Time, y = Water.Level), colour  = 'dodgerblue',  size = LineSize) +",
-                    "geom_point(data = plotdata, aes(x = Date.Time, y = Water.Level), colour  = 'dodgerblue',  size = JitterSize, shape=19) +",
-                    "xlab('') + ylab('Water Level, feet') +",
-                    "scale_x_datetime(date_minor_breaks = '1 day') +", # ggplot 2.0.0+ syntax
-                    "theme_jm1",  # Theme for HTML readability
-                    "```")        # R code section end line
+    ## knitr_data <- NULL                    # For interactive development
+    knitr_data <- c(knitr_data, plot_header) # Append to existing data, report header on first plot, NULL after that 
 
+    knitr_data <-c(knitr_data,
+                   "ggplot() +", # Daily measurements boxplot with no whiskers, time ordered measurements and high/low predictions
+                   "geom_boxplot(data = plotdata, aes(group = DateT, x = DateT, y = Water.Level), coef = 0, outlier.size = 0, outlier.colour = 'NA', size = 0.3, colour = 'darkgray') +",
+                   "geom_point(data = prediction_high, aes(x = Time, y = predictions_in_ft), colour  = 'red', size = PointSize, shape=19) +",
+                   "geom_point(data = prediction_low,  aes(x = Time, y = predictions_in_ft), colour  = 'red', size = PointSize, shape=19) +",
+                   "geom_line(data  = prediction_high, aes(x = Time, y = predictions_in_ft), colour  = 'red', size = LineSize) +",
+                   "geom_line(data  = prediction_low,  aes(x = Time, y = predictions_in_ft), colour  = 'red', size = LineSize) +",
+                   "geom_line(data  = plotdata, aes(x = Date.Time, y = Water.Level), colour  = 'dodgerblue',  size = LineSize) +",
+                   "geom_point(data = plotdata, aes(x = Date.Time, y = Water.Level), colour  = 'dodgerblue',  size = JitterSize, shape=19) +",
+                   "xlab('') + ylab('Water Level, feet') +",
+                   "scale_x_datetime(date_minor_breaks = '1 day') +", # ggplot 2.0.0+ syntax
+                   "theme_jm1")                                       # Theme for HTML readability
+
+    ## eval(parse(text = knitr_data))                                 # For interactive development
+
+    knitr_data  <- c(knitr_data, "```")                         # End R code section
     html_output <- c(html_output, knit2html(text = knitr_data)) # Render plot now so it uses current dataframe
-    knitr_data <- NULL                                          # Clear vector for next plot
+    knitr_data  <- NULL                                         # Clear vector for next plot
 }
-
 
 ## Compute monthly tidal range at each station
 ##
@@ -220,10 +223,8 @@ knitr_data <- c(knitr_data, "## Monthly Tidal Range") # Report section header
 ## Summary Plot 1
 
 ## plot_number <- plot_number + 1
-plot_label <- paste('plot', plot_number, sep = '')
-
-plot_header <- paste('```{r plot', plot_number, 
-                     ', echo=FALSE, message=FALSE, fig.width = FigureWidth, fig.height = FigureHeight}', sep = '')
+plot_label  <- paste('plot', plot_number, sep = '')
+plot_header <- paste('```{r plot', plot_number, ', echo=FALSE, message=FALSE, fig.width = FigureWidth, fig.height = FigureHeight}', sep = '')
 
 knitr_data <- c(knitr_data, plot_header,
                 "ggplot(wl_range) +",
@@ -232,16 +233,14 @@ knitr_data <- c(knitr_data, plot_header,
                 "xlab('Stream Distance') + ylab('Monthly Tidal Range, feet') + theme_jm1",
                 "```")
 html_output <- c(html_output, knit2html(text = knitr_data)) # Render plot
-knitr_data <- NULL                                          # Clear vector buffer
+knitr_data  <- NULL                                         # Clear vector buffer
 
 
 ## Summary Plot 2
 
 ## plot_number <- plot_number + 1
-plot_label <- paste('plot', plot_number, sep = '')
-
-plot_header <- paste('```{r plot', plot_number, 
-                     ', echo=FALSE, message=FALSE, fig.width = FigureWidth, fig.height = FigureHeight}', sep = '')
+plot_label  <- paste('plot', plot_number, sep = '')
+plot_header <- paste('```{r plot', plot_number, ', echo=FALSE, message=FALSE, fig.width = FigureWidth, fig.height = FigureHeight}', sep = '')
 
 knitr_data <- c(knitr_data, plot_header,
                 "ggplot(wl_range) +",
@@ -251,7 +250,6 @@ knitr_data <- c(knitr_data, plot_header,
 html_output <- c(html_output, knit2html(text = knitr_data)) # Render plot
 knitr_data <- NULL                                          # Clear vector buffer
 
-
 ## Summary Table (xtable could be used if more control is desired)
 ##
 knitr_data <- c(knitr_data, # Append table data
@@ -259,7 +257,8 @@ knitr_data <- c(knitr_data, # Append table data
                 "```{r table1, echo=FALSE, message=FALSE}",
                 "kable(wl_range_presentation, digits = 2, row.names = TRUE)",
                 "```",
-                '***')
+                '***',
+                "`r RCSid`")
 
 knitr_data <- c(knitr_data, # Append CSS data, need to do it at end to override defaults
     '<style type="text/css">',
